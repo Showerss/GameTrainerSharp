@@ -109,18 +109,38 @@
 - Short design docs only; avoid thick upfront specs.
 - Review diffs; ask "why" when surprised.
 
-## Still undecided (next question round)
-- Exact target scores for CartPole and later games (GridWorld is locked at 95%).
-- Specific harder games beyond GridWorld/CartPole.
-- Solution/project layout for the Avalonia GUI project and the service layer.
-- Final approval of `ILearner` / `Evaluator` / `IObservationEncoder` signatures (proposal on the table).
-- Run folder layout: exact filenames + metrics CSV columns.
-- Config JSON schema: field names and defaults.
-- Eval cadence during training (every N steps vs end only) — needed to define "steps to solve".
-- "Steps to solve" definition: first eval pass vs must hold for K consecutive evals.
-- RNG derivation rule: how component seeds are derived from the master seed.
-- Aggregation stats: std vs min/max; final eval vs best eval.
-- PPO config surface: which hyperparameters the config may vary.
-- Failure policy: NaN/divergence mid-training (kill run with error marker vs checkpoint-and-stop).
+## Spec completeness rule (locked, 2026-11-04)
+- Every decision is either **LOCKED** (written in this doc) or **DELEGATED**
+  (explicitly listed below as the implementer's free choice). Nothing is
+  implicitly undecided — implicit ambiguity is what this process exists to kill.
+- **Done grilling = both tests pass:**
+  1. **Walkthrough test**: every user story A-I can be narrated end-to-end with
+     no "and then somehow..." gaps.
+  2. **Three-AIs test**: three independent implementers reading this doc would
+     make the same *observable* choices (game rules, metrics, verdicts,
+     milestones, user-facing behavior). Code details may differ freely.
+
+## Still to grill (high-level only)
+- "Steps to solve" definition: first eval pass vs must hold for K consecutive
+  evals. **This is the headline research metric — it must be exact.**
+- Eval cadence during training (every N steps vs end only) — feeds the metric above.
+- PPO ablation surface: which knobs configs may vary (lr, clip, gamma, network
+  size, budget, features). **Defines the entire experiment space.**
+- Aggregation across seeds: std vs min/max; final eval vs best eval.
+- Failure policy: when training diverges/NaNs, what does the user see?
+  (Story G depends on this.)
 - GUI v1 scope: which user stories make the first cut.
+- Target scores for CartPole and later games (GridWorld is locked at 95%).
+- Specific harder games beyond GridWorld/CartPole.
 - "Confidence" in story F: define (PPO action probability?) or drop.
+- Milestone definitions beyond M1/M2: what triggers starting game #2, and what
+  triggers the vision phase.
+
+## Delegated to the implementer (free choice — must document what was chosen)
+- Exact C# interface signatures and file/class layout (within the
+  responsibilities above).
+- Solution/project layout for the Avalonia GUI and service layer.
+- Run folder layout: exact filenames, metrics CSV columns.
+- Config JSON schema: exact field names and defaults.
+- RNG derivation rule: how component seeds are derived from the master seed
+  (requirement: deterministic and documented, nothing more).

@@ -20,6 +20,11 @@
 - OOP patterns to showcase: abstraction/polymorphism (IEnvironment), inheritance, strategy (policies), decorator (epsilon-greedy), factory, dependency injection.
 - Rule: only `ExperimentRunner` and the factory know concrete classes; everything else depends on interfaces.
 
+### Code readability rules (locked, 2026-11-04)
+- **Simple data structures and simple, effective logic** — prefer a plain record/array/list over a clever abstraction; no design-pattern-for-its-own-sake.
+- **Human-readable code a junior dev could review.** Descriptive names over comments, small methods, no clever one-liners. If a junior can't follow it, rewrite it simpler.
+- **XML doc comments (`/// <summary>`, the C# equivalent of Javadoc) on every public type and member** — interfaces, classes, public methods. Generated API docs should let a newcomer navigate the codebase without reading implementations.
+
 ## Contracts
 - `StepResult.Done` is a **computed property**: `Terminated || Truncated`. Never stored. (Gymnasium convention.)
 - `ILearner.Train(env, budget)`: **budget is in environment steps** — the same unit as the efficiency metric, so configs, metrics, and ablations share one language.

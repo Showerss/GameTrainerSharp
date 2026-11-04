@@ -135,6 +135,10 @@
 - "Confidence" in story F: define (PPO action probability?) or drop.
 - Milestone definitions beyond M1/M2: what triggers starting game #2, and what
   triggers the vision phase.
+- Ablation verdict scope (stories B, E): does the 2-point tolerance band apply
+  to budget/feature ablations too, or only to distillation generations?
+- Story I (employer): are headline results committed to the repo (e.g., a
+  results/ folder or README table), or generated on demand by rerunning?
 
 ## Delegated to the implementer (free choice — must document what was chosen)
 - Exact C# interface signatures and file/class layout (within the

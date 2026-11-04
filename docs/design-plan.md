@@ -1,8 +1,13 @@
 # GameTrainerSharp — Design Plan: OOP vs Functional Layouts
 
+> **SUPERSEDED (2026-11-04):** The M0 decision below (Option C, hybrid) was
+> overturned in a later grill session. Final decision: **full classic OOP** with
+> FP habits only. See `docs/DESIGN.md` — Style. This file is kept for history;
+> it explains the options considered, but do not implement from it.
+
 Planning document for porting `Showerss/GameTrainer` (Python) to C#.
 
-**Decision (M0): Option C — hybrid "functional core, imperative shell".**
+**Decision (M0): Option C — hybrid "functional core, imperative shell".** *(superseded — see banner above)*
 Options A and B are kept below for reference; they explain why the code
 looks the way it does.
 

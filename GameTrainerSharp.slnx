@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GameTrainer.Core/GameTrainer.Core.csproj" />
+    <Project Path="src/GameTrainer.Games/GameTrainer.Games.csproj" />
+    <Project Path="src/GameTrainer.Runner/GameTrainer.Runner.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GameTrainer.Tests/GameTrainer.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,7 +1,12 @@
 # GameTrainerSharp: Locked Design Decisions (from grill sessions, 2026-11-04)
 
-> Note: `docs/design-plan.md` (Option A/B/C comparison) is **superseded** — kept for
-> history. Final decision: full classic OOP (see Style).
+> **Doc roles (read first):**
+> - **This file = THE SPEC.** Every locked decision lives here; it is the single
+>   source of truth for all implementation. Spec-first rule: **no code gets
+>   written until "Still undecided" (bottom of this file) is empty.**
+> - `docs/TURNOVER.md` = session handoff only (current state + next action).
+>   Never contains decisions that aren't also here.
+> - `docs/design-plan.md` = superseded history. Do not implement from it.
 
 ## Current state of the repo (read from code)
 - C# port of an existing Python project; at "Milestone 0".

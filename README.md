@@ -1,63 +1,51 @@
 # GameTrainerSharp
 
-**C# port of [GameTrainer](https://github.com/Showerss/GameTrainer) (now the deprecated reference): teach a computer to play games by trial and error, with game-swapping as a config change.**
+**Generational reinforcement learning game trainer in C# — teach a fast vector brain first, then coach and transplant its decision weights into visual brains, tracked in a classic Windows 2000 Avalonia observatory.**
 
-The Python original proved the concept. This repo rebuilds it in C# with two deliberate style choices:
+## Architecture
 
-- **Functional core** — game rules, rewards, and vision parsing are pure functions over immutable records (`GridWorldRules.Step`: state in, new state out). No mocks needed to test a rule.
-- **Imperative shell** — OS touch-points (screen capture, key presses) and the PPO brain live behind interfaces (`IEyes`, `IHands`, `IPolicy`) as plain stateful classes.
+- **Functional core** — game rules, rewards, spawner strategies, and dual vector/visual state projections are pure functions over immutable records (`GridWorldRules.Step`, `GridState`).
+- **Two-layer dual-modal contract** — games keep strongly-typed enums (`Move`) internally while exposing `IGameEnvironment` at the boundary with discrete `int` actions (`0..ActionCount-1`), `GetVectorObservation()`, and `GetVisualObservation()` on the same tick.
+- **Generational Brain (`GameTrainer.Brain`)** — TorchSharp policies split into a modality-specific encoder (`VectorEncoder` or `VisualEncoder`) and a shared 64-dim `DecisionHead`, supporting:
+  1. `Scratch`: Pure PPO trial-and-error (`Parent = None`)
+  2. `Coach`: Side-by-side action probability distillation from a frozen parent model with decaying guidance $\lambda(t)$
+  3. `CoachAndCopyHead`: Direct `DecisionHead` weight transplantation from parent to child + decaying coaching
+- **Observatory Dashboard (`GameTrainer.Gui`)** — Cross-platform Avalonia UI desktop dashboard (Windows 2000 classic aesthetic) reading from the local `artifacts/` catalog store (`catalog.json`, `metrics.jsonl`, `training.log`, `model.pt`).
 
-See `docs/design-plan.md` for the full OOP-vs-functional comparison this layout was chosen from.
-
-## The contract
-
-Every game keeps one promise (`IEnvironment<TObs, TAct>`):
-
-```csharp
-TObs Reset();
-StepResult<TObs> Step(TAct action);   // observation, reward, terminated, truncated, steps
-```
-
-If a game keeps that promise, any learner can play it. (This is Gymnasium's `reset()`/`step()`, spelled in C#.)
+See [docs/design-plan.md](docs/design-plan.md) for the full architectural blueprint.
 
 ## Layout
 
-```
+```text
 src/
-  GameTrainer.Core/    StepResult, IEnvironment, IPolicy — the seams
-  GameTrainer.Games/   GridWorld (pure rules + thin stateful shell + RandomStart decorator)
-  GameTrainer.Runner/  composition root; random-policy baseline runner
+  GameTrainer.Core/    IGameEnvironment, IGameDescriptor, EnvironmentSpec, CatalogStore
+  GameTrainer.Games/   GridWorld (pure rules, spawners, vector + 3x20x20 visual renderer)
+  GameTrainer.Brain/   TorchSharp VectorEncoder, VisualEncoder, DecisionHead, GenerationalPpoTrainer
+  GameTrainer.Runner/  CLI trainer & baseline runner writing to CatalogStore
+  GameTrainer.Gui/     Windows 2000-styled Avalonia UI Observatory Dashboard
 tests/
-  GameTrainer.Tests/   xUnit — pure-rule tests need no mocks
+  GameTrainer.Tests/   xUnit test suite
 ```
 
-## Milestone 0 (this commit)
-
-- [x] Solution scaffold, the `IEnvironment` contract, `StepResult`
-- [x] GridWorld ported from `gridworld.py` (5x5, walls clamp, −0.01 step cost, +1.0 goal, 100-step cap)
-- [x] `RandomStartEnvironment` decorator (random start, goal off the corner — unsolvable blind)
-- [x] Random-policy runner reproducing the Python repo's measured baselines:
-
-| Task | Python baseline | C# M0 measured |
-| :--- | :--- | :--- |
-| GridWorld (fixed start) | random ≈ −0.09 | **−0.07** |
-| GridWorld vision task (25-step cap) | random ≈ 53% goal rate | **54.3%** |
-
-## Run it
+## Run It
 
 ```bash
-dotnet test                                        # 12 tests
-dotnet run --project src/GameTrainer.Runner        # fixed-start baseline
+# Run all unit and integration tests
+dotnet test
+
+# 1. Train Generation 1 (Vector Teacher) from scratch
+dotnet run --project src/GameTrainer.Runner -- --game gridworld --version v1.0 --modality Vector --mode Scratch --episodes 120
+
+# 2. Train Generation 2 (Visual Student) coached by v1.0 + DecisionHead weight transplant
+dotnet run --project src/GameTrainer.Runner -- --game gridworld --version v2.0 --modality Visual --mode CoachAndCopyHead --parent v1.0 --episodes 120
+
+# 3. Launch the Windows 2000 Avalonia Observatory Dashboard
+dotnet run --project src/GameTrainer.Gui
+
+# Legacy random-policy baselines
+dotnet run --project src/GameTrainer.Runner -- baseline
 dotnet run --project src/GameTrainer.Runner -- gridworld-vision
 ```
-
-## Next milestones
-
-1. **PPO brain** via TorchSharp (`IPolicy` implementation) — full port, no Python at runtime
-2. CartPole physics env (validates PPO against the known M1 result: 22 → 500)
-3. Eyes/hands: `IEyes`/`IHands` with one implementation per OS
-4. YAML profiles + factory (swap games with zero code edits)
-5. Minesweeper on a real desktop app
 
 ## License
 

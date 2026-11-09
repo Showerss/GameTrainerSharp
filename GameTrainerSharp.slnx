@@ -2,7 +2,9 @@
   <Folder Name="/src/">
     <Project Path="src/GameTrainer.Core/GameTrainer.Core.csproj" />
     <Project Path="src/GameTrainer.Games/GameTrainer.Games.csproj" />
+    <Project Path="src/GameTrainer.Brain/GameTrainer.Brain.csproj" />
     <Project Path="src/GameTrainer.Runner/GameTrainer.Runner.csproj" />
+    <Project Path="src/GameTrainer.Gui/GameTrainer.Gui.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/GameTrainer.Tests/GameTrainer.Tests.csproj" />

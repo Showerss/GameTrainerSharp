@@ -3,44 +3,72 @@ using GameTrainer.Core;
 namespace GameTrainer.Games.GridWorld;
 
 /// <summary>
-/// A 5x5 walk-to-the-goal world behind the <see cref="IEnvironment{TObs,TAct}"/>
-/// contract — the imperative shell around <see cref="GridWorldRules"/>.
+/// A 5x5 walk-to-the-goal world behind both <see cref="IGameEnvironment"/> (uniform dual-modal seam)
+/// and <see cref="IEnvironment{TObs,TAct}"/>.
 /// All rules live in the pure core; this class only holds "where we are now".
-/// (Port of gridworld.py GridWorldEnv, M2.)
 /// </summary>
-public sealed class GridWorldEnvironment : IEnvironment<float[], Move>
+public sealed class GridWorldEnvironment : IGameEnvironment, IEnvironment<float[], Move>
 {
     public const int MaxSteps = 100;
 
-    private static readonly (int Row, int Col) Start = (0, 0);
-    private static readonly (int Row, int Col) DefaultGoal = (4, 4);
+    public static readonly EnvironmentSpec DefaultSpec = new(
+        VectorObservationSize: 4,
+        VisualChannels: GridState.VisualChannels,
+        VisualHeight: GridState.VisualSize,
+        VisualWidth: GridState.VisualSize,
+        ActionCount: 4,
+        ActionNames: ["Up", "Down", "Left", "Right"]);
 
     private readonly RewardCalculator _rewards;
     private readonly int _maxSteps;
-    private GridState _state = new(Start.Row, Start.Col, DefaultGoal.Row, DefaultGoal.Col, 0);
+    private readonly Func<Random, GridState> _spawner;
+    private readonly Random _rng;
+    private GridState _state;
     private bool _terminated;
 
-    public GridWorldEnvironment(RewardCalculator? rewards = null, int maxSteps = MaxSteps)
+    public GridWorldEnvironment(
+        RewardCalculator? rewards = null,
+        int maxSteps = MaxSteps,
+        Func<Random, GridState>? spawner = null,
+        Random? rng = null)
     {
         _rewards = rewards ?? new RewardCalculator(StepCost: -0.01f, GoalReward: 1.0f);
         _maxSteps = maxSteps;
+        _spawner = spawner ?? GridWorldSpawners.FixedStart;
+        _rng = rng ?? new Random();
+        _state = _spawner(_rng);
     }
 
-    /// <summary>Current state, exposed for wrappers (RandomStart) and tests.</summary>
+    public EnvironmentSpec Spec => DefaultSpec;
+
+    /// <summary>Current immutable state value.</summary>
     public GridState State => _state;
+
+    void IGameEnvironment.Reset() => Reset();
 
     public float[] Reset()
     {
-        _state = new GridState(Start.Row, Start.Col, DefaultGoal.Row, DefaultGoal.Col, Steps: 0);
+        _state = _spawner(_rng);
         _terminated = false;
         return _state.ToObservation();
     }
 
-    /// <summary>Put the agent/goal somewhere specific (used by RandomStartEnvironment).</summary>
-    public void Place(int row, int col, int goalRow, int goalCol)
+    public float[] GetVectorObservation() => _state.ToVectorObservation();
+
+    public VisualFrame GetVisualObservation() => _state.ToVisualObservation();
+
+    public StepOutcome Step(int actionIndex)
     {
-        _state = new GridState(row, col, goalRow, goalCol, Steps: 0);
-        _terminated = false;
+        if (actionIndex < 0 || actionIndex >= DefaultSpec.ActionCount)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(actionIndex),
+                actionIndex,
+                $"Action index must be between 0 and {DefaultSpec.ActionCount - 1}.");
+        }
+
+        var result = Step((Move)actionIndex);
+        return new StepOutcome(result.Reward, result.Terminated, result.Truncated, result.Steps);
     }
 
     public StepResult<float[]> Step(Move action)

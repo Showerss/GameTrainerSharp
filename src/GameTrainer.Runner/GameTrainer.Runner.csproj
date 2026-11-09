@@ -1,8 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\GameTrainer.Core\GameTrainer.Core.csproj" />
     <ProjectReference Include="..\GameTrainer.Games\GameTrainer.Games.csproj" />
+    <ProjectReference Include="..\GameTrainer.Brain\GameTrainer.Brain.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
